@@ -20,6 +20,7 @@ from django.urls import (
 )
 from .views import (
     login,
+    logout,
     test_api
 )
 
@@ -27,5 +28,6 @@ from .views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/login', login),
-    path('api/test_api', test_api)
+    path('api/test_api', test_api),
+    path('api/logout', logout),
 ]

@@ -24,3 +24,9 @@
 - URL: [http://127.0.0.1:8000/api/test_api](http://127.0.0.1:8000/api/test_api)
 - Method: GET
 - Headers: {"Authorization": "Token <jwt_token>"}
+- Response: {"msg": "Log in with jwt successfully."}
+
+### Logout
+- URL: [http://127.0.0.1:8000/api/logout](http://127.0.0.1:8000/api/logout)
+- Method: GET
+- Response: {"msg": "Log out successfully."}

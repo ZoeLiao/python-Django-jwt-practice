@@ -1,3 +1,4 @@
+import arrow
 import json
 import jwt
 
@@ -34,9 +35,12 @@ def login(request):
     # TODO: replace with models
     if phone == settings.DEFAULT_PHONE and password == settings.DEFAULT_PASSWORD:
         payload = {
-            'phone': phone
+            'phone': phone,
+            'iat': arrow.now().timestamp,
+            'exp': arrow.now().shift(minutes=5).timestamp
         }
         jwt_token = jwt.encode(payload, settings.SECRET, algorithm='HS256').decode('utf-8')
+        request.session['jwt_token'] = jwt_token
         return JsonResponse(jwt_token, safe=False)
 
     else:
@@ -50,6 +54,14 @@ def login(request):
 @csrf_exempt
 @api_view(['GET'])
 def test_api(request):
+    # TODO: import from auth @login_required
+    if not request.session.get('jwt_token'):
+        return Response(
+            json.dumps({'Error': 'Invalid credentials'}),
+            status=400,
+            content_type='application/json'
+        )
+
     auth = get_authorization_header(request).split()
     if not auth or auth[0].lower() != b'token':
         return Response(
@@ -62,13 +74,32 @@ def test_api(request):
     token = jwt.decode(encoded_token, settings.SECRET, algorithms=['HS256'])
     # TODO: replace with models
     if token.get('phone') == settings.DEFAULT_PHONE: 
-        return Response(
-            {'test_data': 'log in with jwt successfully'},
-            status=HTTP_200_OK
-        )
+        if arrow.get(token.get('exp')) >= arrow.now():
+            return Response(
+                {'msg': 'Log in with jwt successfully.'},
+                status=HTTP_200_OK
+            )
 
     return Response(
         json.dumps({'Error': 'Invalid user'}),
         status=401,
         content_type='application/json'
+    )
+
+
+@csrf_exempt
+@api_view(['GET'])
+def logout(request):
+    jwt_token = request.session.get('jwt_token')
+    if not jwt_token:
+        return Response(
+            json.dumps({'Error': 'Invalid user'}),
+            status=401,
+            content_type='application/json'
+        )
+
+    del request.session['jwt_token']
+    return Response(
+        {'msg': 'Log out successfully.'},
+        status=HTTP_200_OK
     )
